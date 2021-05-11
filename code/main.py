@@ -1,0 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed May  5 08:58:11 2021
+
+@author: marie
+
+Inter-annual variability of NN-predicted GPP.
+
+
+
+1. IMPORT OBSERVATIONS (PROFOUND DATA): X1
+
+2. CALIBRATE AND RUN PRELES WITH OBSERVATIONS: X2
+
+3. FIT AND PREDICT WITH NETWORK TO OBSERVATIONS: X3
+
+4. BI-VARIATE CORRELATION ANALYSIS FOR X1, X2, X3.
+
+"""
