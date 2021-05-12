@@ -30,6 +30,7 @@ sys.path.append('/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena/co
 
 #%% Import packages
 import preprocessing
+import visualizations
 
 #%%
 X, Y, Y_Preles = preprocessing.load_data()
@@ -42,3 +43,6 @@ X_P1 , Y_P1, Y_Preles_P1 = preprocessing.split_data(X, Y, Y_Preles,
 X_P2 , Y_P2, Y_Preles_P2 = preprocessing.split_data(X, Y, Y_Preles,
                                                     years = [2006, 2007, 2008, 2009, 2010, 2011])
 
+#%% Plot Data
+visualizations.plot_data(Y_P1, Y_Preles_P1)
+visualizations.plot_data(Y_P2, Y_Preles_P2)
