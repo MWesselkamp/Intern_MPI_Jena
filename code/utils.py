@@ -7,32 +7,42 @@ Created on Wed May  5 12:13:59 2021
 Utility Functions.
 
 """
-import os
-import os.path
+import torch
 import pandas as pd
+import numpy as np
 
-#%% Load observations
-
-def load_data(dataset, simulated, 
-              data_dir = "OneDrive\Dokumente\Sc_Master\Internship\Intern_MPI_Jena\data"):
+#%%
+def minmax_scaler(data, scaling = None):
+    """
+    This function scales all features in an array between mean and standard deviation. 
     
-    path_in = os.path.join(data_dir, f"{dataset}_clim")
-    
-    if (simulated==True):
-        path_out = os.path.join(data_dir, f"{dataset}_preles_gpp")
-    else:
-        path_out = os.path.join(data_dir, f"{dataset}_gpp")
+    Args:
+        data(np.array): two dimensional array containing model features.
         
-    X = pd.read_csv(path_in, sep=";")
-    Y = pd.read_csv(path_out, sep=";")
-    
-    # Remove nows with na values
-    #rows_with_nan = pd.isnull(X).any(1).to_numpy().nonzero()[0]
-    #X = X.drop(rows_with_nan)
-    #Y = Y.drop(rows_with_nan)
-    
-    return X, Y
+    Returns:
+        data_norm(np.array): two dimensional array of scaled model features.
+    """
+    #scaler = MinMaxScaler(feature_range = (-1,1))
+    if (scaling is None):
+        
+        if (isinstance(data, pd.DataFrame)):
+            data_norm = (data - data.mean())/ data.std()
+        elif (torch.is_tensor(data)):
+            data_norm = (data - torch.mean(data)) / torch.std(data)
+        else:
+            data_norm = (data - np.mean(data, axis=0))/np.std(data, axis=0)
+    else: 
+        data_norm = (data - scaling[0])/scaling[1]
+        
+    return data_norm
 
-X, Y = load_data("soro", False)
-#%% Run Preles (R-Script)
+#%%
+def encode_doy(doy):
+    """Encode the day of the year on a circle.
     
+    Thanks to: Philipp Jund.
+    
+    """
+    doy_norm = doy / 365 * 2 * np.pi
+    
+    return np.sin(doy_norm), np.cos(doy_norm)
