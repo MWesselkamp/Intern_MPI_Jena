@@ -9,10 +9,12 @@ library(Rpreles)
 library(BayesianTools)
 
 # load data
-load("~/Documents/Projects/Intern_MPI_Jena/data/soro_clim.Rdata")
+load("data/soro_clim.Rdata")
+load("data/soro_gpp.Rdata")
 # load default parameter values
-load("~/Documents/Projects/Intern_MPI_Jena/rdata/ParameterRangesPreles.RData")
+load("rdata/ParameterRangesPreles.RData")
 
+parind <- c(5:10, 14:16) # Indexes for PRELES parameters
 
 #==================#
 # Calibrate PREles #
@@ -22,11 +24,11 @@ load("~/Documents/Projects/Intern_MPI_Jena/rdata/ParameterRangesPreles.RData")
 likelihood <- function(pValues){
   p <- par$def
   p[parind] <- pValues # new parameter values
-  predicted<- PRELES(DOY=profound_in$DOY,PAR=profound_in$PAR,TAir=profound_in$TAir,VPD=profound_in$VPD,Precip=profound_in$Precip,
-                     CO2=profound_in$CO2,fAPAR=profound_in$fAPAR,p=p[1:30])
-  diff_GPP <- predicted$GPP-profound_out
+  predicted<- PRELES(DOY=X$DOY,PAR=X$PAR,TAir=X$TAir,VPD=X$VPD,Precip=X$Precip,
+                     CO2=X$CO2,fAPAR=X$fAPAR,p=p[1:30])
+  diff_GPP <- predicted$GPP-y$GPP
   # mäkälä
-  llvalues <- sum(dnorm(predicted$GPP, mean = profound_out, sd = p[31], log=T)) ###   llvalues <- sum(dnorm(diff_GPP, sd = p[31], log=T))
+  llvalues <- sum(dnorm(predicted$GPP, mean = y$GPP, sd = p[31], log=T)) ###   llvalues <- sum(dnorm(diff_GPP, sd = p[31], log=T))
   #llvalues <- sum(dexp(abs(diff_GPP),rate = 1/(p[31]+p[32]*predicted$GPP),log=T))
   return(llvalues)
 }
@@ -43,7 +45,7 @@ bssetup <- checkBayesianSetup(BSpreles)
 
 #=Run the MCMC with three chains=#
 
-settings <- data.frame(iterations = 1e5, optimize=F, nrChains = 3)
+settings <- data.frame(iterations = 1e5, nrChains = 3)
 chainDE <- runMCMC(BSpreles, sampler="DEzs", settings = settings)
 par.opt<-MAP(chainDE) #gets the optimized maximum value for the parameters
 
@@ -57,17 +59,16 @@ correlationPlot(chainDE, parametersOnly = TRUE, start = 2000)
 # save calibrated parameters
 par$calib = par$def
 par$calib[parind] = par.opt$parametersMAP
-save(par, file = "~/Sc_Master/Masterthesis/Project/DomAdapt/Rdata/CalibratedParametersHytProf.Rdata")
+save(par, file = "rdata/CalibratedParametersSoro.Rdata")
+write.table(par, file="data/params_calibrated", sep = ";",row.names = FALSE)
 
 #======================#
 # Simulate from PREles #
 #======================#
 
-output <- PRELES(TAir = X$TAir, PAR = X$PAR, VPD = X$VPD, Precip = X$Precip, 
-                 fAPAR = X$fAPAR, CO2 = X$CO2,
-                 returncols = c("GPP", "SW", "ET"))
+output <- PRELES(TAir = X$TAir, PAR = X$PAR, VPD = X$VPD, Precip = X$Precip, fAPAR = X$fAPAR, CO2 = X$CO2, p = par$calib[1:30], returncols = c("GPP", "SW", "ET"))
 
 y_preles = as.data.frame(do.call(cbind, output))
 
-save(y_preles, file="~/Documents/Projects/Intern_MPI_Jena/data/preles_sims.Rdata")
-write.table(y_preles, file="~/Documents/Projects/Intern_MPI_Jena/data/preles_sims", sep = ";",row.names = FALSE)
+save(y_preles, file="data/soro_preles_gpp.Rdata")
+write.table(y_preles, file="data/soro_preles_gpp", sep = ";",row.names = FALSE)
