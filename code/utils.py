@@ -11,6 +11,8 @@ import torch
 import pandas as pd
 import numpy as np
 
+import random
+
 #%%
 def minmax_scaler(data, scaling = None):
     """
@@ -46,3 +48,35 @@ def encode_doy(doy):
     doy_norm = doy / 365 * 2 * np.pi
     
     return np.sin(doy_norm), np.cos(doy_norm)
+
+#%% 
+def create_batches(X, Y, batchsize, history):
+    
+    """
+    Creates Mini-batches from training data set.
+    Used in: dev_mlp.train_model_CV
+    """
+    
+    subset = [j for j in random.sample(range(X.shape[0]), batchsize) if j > history]
+    subset_h = [item for sublist in [list(range(j-history,j)) for j in subset] for item in sublist]
+    x = np.concatenate((X[subset], X[subset_h]), axis=0)
+    y = np.concatenate((Y[subset], Y[subset_h]), axis=0)
+    
+    return x, y
+
+#%%
+def rmse(targets, predictions):
+    
+    """
+    Computes the Root Mean Squared Error.
+    
+    Args:
+        targets (torch.tensor)
+        predictions (torch.tensor)
+    """
+    if torch.is_tensor(targets):
+        rmse = np.sqrt(np.mean(np.square(targets-predictions).numpy()))
+    else:
+        rmse = np.sqrt(np.mean(np.square(targets-predictions)))
+    
+    return rmse
