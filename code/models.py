@@ -10,12 +10,12 @@ import torch.nn as nn
 
 class MLP(nn.Module):
     
-    def __init__(self, hidden_layers, layer_sizes):
+    def __init__(self, layer_sizes):
         
         super(MLP, self).__init__()
         
         self.layer_sizes = layer_sizes
-        self.hidden_layers = hidden_layers
+        self.hidden_layers = len(layer_sizes)-2
         
         self.network = self.layers()
         

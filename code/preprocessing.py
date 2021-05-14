@@ -56,6 +56,15 @@ def standardize_data(X):
     
     return X_scaled
         
+#%%
+def preprocessing():
+    
+    X, Y, Y_Preles = load_data()
+    X = modify_data(X)
+    X = subset_data(X)
+    X = standardize_data(X)
+    
+    return X, Y, Y_Preles
 
 #%%
 def split_data(X, Y, Y_Preles, 

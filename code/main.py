@@ -33,44 +33,47 @@ import preprocessing
 import visualizations
 import utils
 import training
-
+import prediction
+import matplotlib.pyplot as plt
+import numpy as np
 #%%
-X, Y, Y_Preles = preprocessing.load_data()
-X = preprocessing.modify_data(X)
-X = preprocessing.subset_data(X)
-X = preprocessing.standardize_data(X)
+X, Y, Y_Preles = preprocessing.preprocessing()
 #%% Split data 
 X_P1 , Y_P1, Y_Preles_P1 = preprocessing.split_data(X, Y, Y_Preles,
                                                     years = [2000])
 X_P2 , Y_P2, Y_Preles_P2 = preprocessing.split_data(X, Y, Y_Preles,
-                                                    years = [2006, 2007, 2008, 2009, 2010, 2011])
+                                                    years = [2001])
 
 #%% Plot Data
 visualizations.plot_data(Y_P1, Y_Preles_P1)
 visualizations.plot_data(Y_P2, Y_Preles_P2)
 
-#%% Initialize Model
-import models
-import torch
-net = models.MLP(3, [7,8,16,32,1])
-print(net)
-x = net(torch.tensor(X_P1.to_numpy()).type(dtype=torch.float))
-#%%
-hparams = {"epochs":10000,
+#%% Specify model structure and hyperparameter settings.
+hparams = {"epochs":300,
            "batchsize":16,
            "learningrate":0.01,
            "history":1}
-model_design = {"hidden_layers":3,
-                "layer_sizes":[7,8,16,32,1]}
+model_design = {"layer_sizes":[7,8,16,1]}
+#%% Train m1 and m2 on P1 and P2
+running_losses_d1p1 = training.train(hparams, model_design, X_P1.to_numpy(), Y_P1.to_numpy(), "D1P1")
 
-running_losses, performance, y_tests, y_preds = training.mlp_training(hparams, model_design, 
-                                                                      X_P1.to_numpy(), Y_P1.to_numpy())
+running_losses_d1p2 = training.train(hparams, model_design, X_P2.to_numpy(), Y_P2.to_numpy(), "D1P2")
 
-#%%+
-import matplotlib.pyplot as plt
-import numpy as np
-plt.plot(np.transpose(running_losses["mae_train"]))
-print(running_losses["mae_train"][:,-1])
+#%% Predict with fitted models to P2.
+preds_m1, rmse_m1, mae_m1 = prediction.predict(hparams, model_design, 
+                                             X_P2.to_numpy(), Y_P2.to_numpy(),
+                                             "D1P1")
+
+preds_m2, rmse_m2, mae_m2 = prediction.predict(hparams, model_design, 
+                                             X_P2.to_numpy(), Y_P2.to_numpy(),
+                                             "D1P2")
 #%%
-plt.plot(y_preds[0])
-plt.plot(y_tests[0])
+for i in range(5):
+    plt.plot(preds_m1[i,:])
+print(np.mean(mae_m1))
+#%%
+for i in range(5):
+    plt.plot(preds_m2[i,:])
+print(np.mean(mae_m2))
+#%% 
+print(abs(np.mean(mae_m1)-np.mean(mae_m2)))
