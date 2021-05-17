@@ -24,7 +24,7 @@ def predict(hparams, model_design, X, Y,data,
     
     for i in range(splits):
         
-        model = models.MLP(model_design["hidden_layers"], model_design["layer_sizes"])
+        model = models.MLP(model_design["layer_sizes"])
         model.load_state_dict(torch.load(os.path.join(data_dir, f"{data}_model{i}.pth")))
         model.eval()
         
