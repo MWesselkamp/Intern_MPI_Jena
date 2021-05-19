@@ -74,22 +74,22 @@ running_losses_d2p2 = training.train(hparams_setting, model_design, X_P2.to_nump
 #%%
 plt.plot(np.transpose(running_losses_d1p1["mae_val"]))
 #%% Predict with fitted models to P2.
-preds_d1m1, mae_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
-preds_d1m2, mae_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
+preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
+preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
 
 visualizations.plot_predictions(Y_P2, preds_d1m1, preds_d1m2, mae_d1m1, mae_d1m2)
 #%% 
 plt.plot(np.transpose(running_losses_d2p1["mae_val"]))
 #%% Predict with fitted models to P2.
-preds_d2m1, mae_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P1")
-preds_d2m2, mae_d2m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
+preds_d2m1, mae_d2m1, nse_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P1")
+preds_d2m2, mae_d2m2, nse_d2m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
 
 visualizations.plot_predictions(Y_Preles_P2, preds_d2m1, preds_d2m2, mae_d2m1, mae_d2m2)
 
 #%%
 def fit_with_moving_window(windowsize, seq_len):
     
-    hparams_setting = {"epochs":300,
+    hparams_setting = {"epochs":400,
                        "batchsize":hparams[1],
                        "learningrate":hparams[0],
                        "history":1}
@@ -97,7 +97,8 @@ def fit_with_moving_window(windowsize, seq_len):
     mae_diff_d1 = []
     mae_diff_d2 = []
     
-    df = pd.DataFrame(columns = ["mae_d1m1", "mae_d1m2", "mae_d2m1", "mae_d2m2"])
+    df = pd.DataFrame(columns = ["mae_d1m1", "mae_d1m2", "mae_d2m1", "mae_d2m2",
+                                 "nse_d1m1","nse_d1m2","nse_d2m1","nse_d2m2"])
 
     for i in range(seq_len):
     
@@ -112,18 +113,22 @@ def fit_with_moving_window(windowsize, seq_len):
         running_losses_d2p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_Preles_P1.to_numpy(), "D2P1")
         running_losses_d2p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
         
-        preds_d1m1, mae_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
-        preds_d1m2, mae_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
+        preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
+        preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
         
-        preds_d2m1, mae_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P1")
-        preds_d2m2, mae_d2m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P2")
+        preds_d2m1, mae_d2m1, nse_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P1")
+        preds_d2m2, mae_d2m2, nse_d2m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P2")
         
         #visualizations.plot_predictions(Y_P2, preds_d1m1, preds_d1m2, mae_d1m1, mae_d1m2)
         #visualizations.plot_predictions(Y_Preles_P2, preds_d2m1, preds_d2m2, mae_d2m1, mae_d2m2)
         df = df.append({"mae_d1m1":np.mean(mae_d1m1),
                         "mae_d1m2":np.mean(mae_d1m2),
                         "mae_d2m1":np.mean(mae_d2m1),
-                        "mae_d2m2":np.mean(mae_d2m2)}, True)
+                        "mae_d2m2":np.mean(mae_d2m2),
+                        "nse_d1m1":np.mean(nse_d1m1),
+                        "nse_d1m2":np.mean(nse_d1m2),
+                        "nse_d2m1":np.mean(nse_d2m1),
+                        "nse_d2m2":np.mean(nse_d2m2)}, True)
         
         mae_diff_d1.append(abs(np.mean(mae_d1m2)-np.mean(mae_d1m1)))
         mae_diff_d2.append(abs(np.mean(mae_d2m2)-np.mean(mae_d2m1)))
@@ -138,7 +143,7 @@ def fit_with_moving_window(windowsize, seq_len):
 #%%
 def fit_with_increasing_windowsize(windowsize, max_len):
 
-    hparams_setting = {"epochs":300,
+    hparams_setting = {"epochs":400,
                        "batchsize":hparams[1],
                        "learningrate":hparams[0],
                        "history":1}
@@ -147,7 +152,8 @@ def fit_with_increasing_windowsize(windowsize, max_len):
     if max_len is None:    
         max_len = int(np.floor(len(Y)/2))
         
-    df = pd.DataFrame(columns = ["mae_d1m1", "mae_d1m2", "mae_d2m1", "mae_d2m2"])
+    df = pd.DataFrame(columns = ["windowsize", "mae_d1m1", "mae_d1m2", "mae_d2m1", "mae_d2m2",
+                                 "nse_d1m1","nse_d1m2","nse_d2m1","nse_d2m2"])
     
     for i in range(max_len):
     
@@ -155,7 +161,7 @@ def fit_with_increasing_windowsize(windowsize, max_len):
                                                                    start = 0, stop=windowsize)
         X_P2 , Y_P2, Y_Preles_P2 = preprocessing.split_by_sequence(X, Y, Y_Preles,
                                                                    start = windowsize+1, stop=1+windowsize+windowsize)
-        windowsize += 1
+        windowsize += 20
     
         running_losses_d1p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_P1.to_numpy(), "D1P1")
         running_losses_d1p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(), "D1P2")
@@ -163,16 +169,21 @@ def fit_with_increasing_windowsize(windowsize, max_len):
         running_losses_d2p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_Preles_P1.to_numpy(), "D2P1")
         running_losses_d2p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
         
-        preds_d1m1, mae_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
-        preds_d1m2, mae_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
+        preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
+        preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
         
-        preds_d2m1, mae_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P1")
-        preds_d2m2, mae_d2m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P2")
+        preds_d2m1, mae_d2m1, nse_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P1")
+        preds_d2m2, mae_d2m2, nse_d2m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P2")
 
-        df = df.append({"mae_d1m1":np.mean(mae_d1m1),
+        df = df.append({"windowsize":windowsize,
+                        "mae_d1m1":np.mean(mae_d1m1),
                         "mae_d1m2":np.mean(mae_d1m2),
                         "mae_d2m1":np.mean(mae_d2m1),
-                        "mae_d2m2":np.mean(mae_d2m2)}, True)
+                        "mae_d2m2":np.mean(mae_d2m2),
+                        "nse_d1m1":np.mean(nse_d1m1),
+                        "nse_d1m2":np.mean(nse_d1m2),
+                        "nse_d2m1":np.mean(nse_d2m1),
+                        "nse_d2m2":np.mean(nse_d2m2)}, True)
     
     df.to_excel(r"results/fit_with_increasing_windowsize.xlsx")
     df.to_csv(r"results/fit_with_increasing_windowsize.csv")
@@ -180,15 +191,65 @@ def fit_with_increasing_windowsize(windowsize, max_len):
     return df
 
 #%%
-df = fit_with_moving_window(365, 50)
-#df = fit_with_increasing_windowsize(365, max_len = None)
+def fit_by_year():
+
+    hparams_setting = {"epochs":400,
+                       "batchsize":hparams[1],
+                       "learningrate":hparams[0],
+                       "history":1}
+    model_design = {"layer_sizes":layersizes}
+    
+    years = [2000, 2001 ,2002 ,2003, 2004, 2005 ,2006, 2007, 2008 ,2009 ,2010, 2011, 2012]
+        
+    df = pd.DataFrame(columns = ["eval_year", "mae_d1m1", "mae_d1m2", "mae_d2m1", "mae_d2m2",
+                                 "nse_d1m1","nse_d1m2","nse_d2m1","nse_d2m2"])
+    
+    for i in range(len(years)-1):
+    
+        X_P1 , Y_P1, Y_Preles_P1 = preprocessing.split_by_year(X, Y, Y_Preles,
+                                                    years = [years[i]])
+        X_P2 , Y_P2, Y_Preles_P2 = preprocessing.split_by_year(X, Y, Y_Preles,
+                                                    years = [years[i+1]])
+    
+        running_losses_d1p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_P1.to_numpy(), "D1P1")
+        running_losses_d1p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(), "D1P2")
+        
+        running_losses_d2p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_Preles_P1.to_numpy(), "D2P1")
+        running_losses_d2p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
+        
+        preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
+        preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
+        
+        preds_d2m1, mae_d2m1, nse_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P1")
+        preds_d2m2, mae_d2m2, nse_d2m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(),"D2P2")
+
+        df = df.append({"eval_year":years[i+1],
+                        "mae_d1m1":np.mean(mae_d1m1),
+                        "mae_d1m2":np.mean(mae_d1m2),
+                        "mae_d2m1":np.mean(mae_d2m1),
+                        "mae_d2m2":np.mean(mae_d2m2),
+                        "nse_d1m1":np.mean(nse_d1m1),
+                        "nse_d1m2":np.mean(nse_d1m2),
+                        "nse_d2m1":np.mean(nse_d2m1),
+                        "nse_d2m2":np.mean(nse_d2m2)}, True)
+    
+    df.to_excel(r"results/fit_by_year.xlsx")
+    df.to_csv(r"results/fit_by_year.csv")
+    
+    return df
+
 #%%
-df = pd.read_csv(r"results/fit_with_moving_window.csv")
-df["mae_diff_d1"] = (df["mae_d1m1"]-df["mae_d1m2"])/(df.max()["mae_d1m1"]-df.min()["mae_d1m2"])
-df["mae_diff_d2"] = (df["mae_d2m1"]-df["mae_d2m2"])/(df.max()["mae_d2m1"]-df.min()["mae_d2m2"])
+df3 = fit_by_year()
 #%%
-plt.plot(df["mae_diff_d1"], color="red", label = "Observed GPP")
-plt.plot(df["mae_diff_d2"], color="blue", label = "Simulated GPP")
+df1 = fit_with_moving_window(365, 365)
+df2 = fit_with_increasing_windowsize(90, max_len = 100)
+#%%
+df3 = pd.read_csv(r"results/fit_with_moving_window.csv")
+df3["mae_diff_d1"] = (df3["mae_d1m1"]-df3["mae_d1m2"])#/(df3.max()["mae_d1m1"]-df3.min()["mae_d1m2"])
+df3["mae_diff_d2"] = (df3["mae_d2m1"]-df3["mae_d2m2"])#/(df3.max()["mae_d2m1"]-df3.min()["mae_d2m2"])
+#%%
+plt.plot(df3["mae_diff_d1"], color="red", label = "Observed GPP")
+plt.plot(df3["mae_diff_d2"], color="blue", label = "Simulated GPP")
 plt.legend()
 #%%
 df = pd.read_csv(r"results/fit_with_increasing_windowsize.csv")
@@ -198,3 +259,6 @@ df["mae_diff_d2"] = (df["mae_d2m1"]-df["mae_d2m2"])/(df.max()["mae_d2m1"]-df.min
 plt.plot(df["mae_diff_d1"], color="red", label = "Observed GPP")
 plt.plot(df["mae_diff_d2"], color="blue", label = "Simulated GPP")
 plt.legend()
+
+#%%
+se = utils.nash_sutcliffe(Y_P1.to_numpy().squeeze(1), preds_d1m1)

@@ -10,6 +10,7 @@ import torch
 from sklearn import metrics
 
 import models 
+import utils
 
 import os.path
 #%%
@@ -20,6 +21,7 @@ def predict(hparams, model_design, X, Y,data,
     y = torch.tensor(Y).type(dtype=torch.float)
     
     mae = np.zeros(splits)
+    nse = np.zeros(splits)
     preds = np.zeros((splits, len(Y)))
     
     for i in range(splits):
@@ -31,5 +33,6 @@ def predict(hparams, model_design, X, Y,data,
         with torch.no_grad():
             preds[i,:] = model(x).squeeze(1)
             mae[i] = metrics.mean_absolute_error(y, preds[i,:])
+            nse[i] = utils.nash_sutcliffe(y.numpy().squeeze(1), preds[i,:])
             
-    return preds, mae
+    return preds, mae, nse

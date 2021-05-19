@@ -82,6 +82,13 @@ def rmse(targets, predictions):
     return rmse
 
 #%%
+def nash_sutcliffe(obs, preds):
+    
+    nse = 1 - np.sum(np.square(preds-obs))/np.sum(np.square(obs - np.mean(obs)))
+
+    return nse
+
+#%%
 class EarlyStopping():
     """
     Early stopping to stop the training when the loss does not improve after
