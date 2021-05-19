@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 #%%
 X, Y, Y_Preles = preprocessing.preprocessing()
-X_P1 , Y_P1, Y_Preles_P1 = preprocessing.split_data(X, Y, Y_Preles,
+X_P1 , Y_P1, Y_Preles_P1 = preprocessing.split_by_year(X, Y, Y_Preles,
                                                     years = [2000, 2001])
 #%%
 
@@ -59,7 +59,7 @@ def architecture_search():
     
     return layersizes
 #%%
-layersizes = architecture_search()
+#layersizes = architecture_search()
 #%%
 def hparams_searchspace(gridsize):
     
