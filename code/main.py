@@ -42,13 +42,13 @@ import pandas as pd
 X, Y, Y_Preles = preprocessing.preprocessing()
 #%% Split data by years
 X_P1 , Y_P1, Y_Preles_P1 = preprocessing.split_by_year(X, Y, Y_Preles,
-                                                    years = [2001])
+                                                    years = [2001, 2002])
 X_P2 , Y_P2, Y_Preles_P2 = preprocessing.split_by_year(X, Y, Y_Preles,
-                                                    years = [2002])
+                                                    years = [2003, 2004])
 
 #%% Plot Data
-visualizations.plot_data(Y_P1, Y_Preles_P1)
-visualizations.plot_data(Y_P2, Y_Preles_P2)
+visualizations.plot_data(Y_P1, Y_Preles_P1, True, True)
+visualizations.plot_data(Y_P2, Y_Preles_P2, False, False)
 
 #%% Specify model structure and hyperparameter settings.
 randomsearch = False
@@ -72,14 +72,14 @@ running_losses_d1p2 = training.train(hparams_setting, model_design, X_P2.to_nump
 running_losses_d2p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_Preles_P1.to_numpy(), "D2P1")
 running_losses_d2p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
 #%%
-plt.plot(np.transpose(running_losses_d1p1["mae_val"]))
+visualizations.plot_running_losses(running_losses_d1p1["mae_train"], running_losses_d1p1["mae_val"])
 #%% Predict with fitted models to P2.
 preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
 preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
 
 visualizations.plot_predictions(Y_P2, preds_d1m1, preds_d1m2, mae_d1m1, mae_d1m2)
 #%% 
-plt.plot(np.transpose(running_losses_d2p1["mae_val"]))
+visualizations.plot_running_losses(running_losses_d2p1["mae_train"], running_losses_d2p1["mae_val"])
 #%% Predict with fitted models to P2.
 preds_d2m1, mae_d2m1, nse_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P1")
 preds_d2m2, mae_d2m2, nse_d2m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
@@ -193,23 +193,23 @@ def fit_with_increasing_windowsize(windowsize, max_len):
 #%%
 def fit_by_year():
 
-    hparams_setting = {"epochs":400,
+    hparams_setting = {"epochs":500,
                        "batchsize":hparams[1],
                        "learningrate":hparams[0],
                        "history":1}
     model_design = {"layer_sizes":layersizes}
     
-    years = [2000, 2001 ,2002 ,2003, 2004, 2005 ,2006, 2007, 2008 ,2009 ,2010, 2011, 2012]
+    years = [2000, 2001 ,2002 ,2003, 2004, 2005 ,2006, 2007, 2008 ,2009 ,2010, 2011, 2012, 2000, 2001 ,2002 ]
         
     df = pd.DataFrame(columns = ["eval_year", "mae_d1m1", "mae_d1m2", "mae_d2m1", "mae_d2m2",
                                  "nse_d1m1","nse_d1m2","nse_d2m1","nse_d2m2"])
     
-    for i in range(len(years)-1):
+    for i in range(len(years)-3):
     
         X_P1 , Y_P1, Y_Preles_P1 = preprocessing.split_by_year(X, Y, Y_Preles,
-                                                    years = [years[i]])
+                                                    years = [years[i], years[i+1]])
         X_P2 , Y_P2, Y_Preles_P2 = preprocessing.split_by_year(X, Y, Y_Preles,
-                                                    years = [years[i+1]])
+                                                    years = [years[i+2], years[i+3]])
     
         running_losses_d1p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_P1.to_numpy(), "D1P1")
         running_losses_d1p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(), "D1P2")
@@ -244,12 +244,18 @@ df3 = fit_by_year()
 df1 = fit_with_moving_window(365, 365)
 df2 = fit_with_increasing_windowsize(90, max_len = 100)
 #%%
-df3 = pd.read_csv(r"results/fit_with_moving_window.csv")
+df3 = pd.read_csv(r"results/fit_by_year.csv")
 df3["mae_diff_d1"] = (df3["mae_d1m1"]-df3["mae_d1m2"])#/(df3.max()["mae_d1m1"]-df3.min()["mae_d1m2"])
 df3["mae_diff_d2"] = (df3["mae_d2m1"]-df3["mae_d2m2"])#/(df3.max()["mae_d2m1"]-df3.min()["mae_d2m2"])
+df3["mae_diff_d1_scaled"] = (df3["mae_diff_d1"]-df3.min()["mae_diff_d1"])/(df3.max()["mae_diff_d1"]-df3.min()["mae_diff_d1"])
+df3["mae_diff_d2_scaled"] = (df3["mae_diff_d2"]-df3.min()["mae_diff_d2"])/(df3.max()["mae_diff_d2"]-df3.min()["mae_diff_d2"])
 #%%
 plt.plot(df3["mae_diff_d1"], color="red", label = "Observed GPP")
 plt.plot(df3["mae_diff_d2"], color="blue", label = "Simulated GPP")
+plt.legend()
+#%%
+plt.plot(df3["mae_diff_d1_scaled"], color="red", label = "Observed GPP")
+plt.plot(df3["mae_diff_d2_scaled"], color="blue", label = "Simulated GPP")
 plt.legend()
 #%%
 df = pd.read_csv(r"results/fit_with_increasing_windowsize.csv")
