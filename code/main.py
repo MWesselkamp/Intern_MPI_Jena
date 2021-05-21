@@ -20,13 +20,13 @@ Inter-annual variability of NN-predicted GPP.
 #%% Set working directory
 import os
 print("Current Working Directory " , os.getcwd())
-os.chdir("/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena") 
+os.chdir("/Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena") 
 print("Current Working Directory " , os.getcwd())
 
 #%% Set system path
 import sys
 print(sys.path)
-sys.path.append('/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena/code')
+sys.path.append('/Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena/code')
 
 #%% Import packages
 import preprocessing
@@ -89,7 +89,7 @@ visualizations.plot_predictions(Y_Preles_P2, preds_d2m1, preds_d2m2, mae_d2m1, m
 #%%
 def fit_with_moving_window(windowsize, seq_len):
     
-    hparams_setting = {"epochs":400,
+    hparams_setting = {"epochs":500,
                        "batchsize":hparams[1],
                        "learningrate":hparams[0],
                        "history":1}
@@ -241,7 +241,8 @@ def fit_by_year():
 #%%
 df3 = fit_by_year()
 #%%
-df1 = fit_with_moving_window(365, 365)
+df1 = fit_with_moving_window(730, 365)
+#%%
 df2 = fit_with_increasing_windowsize(90, max_len = 100)
 #%%
 df3 = pd.read_csv(r"results/fit_with_moving_window.csv")
