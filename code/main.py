@@ -87,6 +87,68 @@ preds_d2m2, mae_d2m2, nse_d2m2 = prediction.predict(hparams_setting, model_desig
 visualizations.plot_predictions(Y_Preles_P2, preds_d2m1, preds_d2m2, mae_d2m1, mae_d2m2)
 
 #%%
+import torch
+import models 
+
+model_d1p1 = models.MLP(layersizes)
+model_d1p1.load_state_dict(torch.load(r"models/mlp/D1P1_model0.pth"))
+
+weights = []
+for name, param in model_d1p1.named_parameters():
+    weights.append(param)
+    print(param.shape)
+    print(name)
+#%%
+from scipy.stats import pearsonr
+from scipy.stats import spearmanr
+
+#%%
+df_pearsons = pd.DataFrame(columns = list(X.columns[:7]))
+corr_obs=[]
+corr_preles=[]
+corr_nn_obs=[]
+corr_nn_preles=[]
+for i in range(7):
+        corr_obs.append(pearsonr(X_P2.to_numpy()[:,i], Y_P2.to_numpy().squeeze(1))[0])
+        corr_preles.append(pearsonr(X_P2.to_numpy()[:,i], Y_Preles_P2.to_numpy().squeeze(1))[0])
+        corr_nn_obs.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d1m2, axis=0))[0])
+        corr_nn_preles.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d2m2, axis=0))[0])
+        
+df_length = len(df_pearsons)
+df_pearsons.loc[df_length] = corr_obs
+df_length = len(df_pearsons)
+df_pearsons.loc[df_length] = corr_preles
+df_length = len(df_pearsons)
+df_pearsons.loc[df_length] = corr_nn_obs
+df_length = len(df_pearsons)
+df_pearsons.loc[df_length] = corr_nn_preles
+df_pearsons["target"] = ["obs", "preds_preles", "preds_nn_obs","preds_nn_preles"]
+df_pearsons.to_excel(r"results/persons_correlation.xlsx")
+df_pearsons.to_csv(r"results/persons_correlation.csv")
+#%%
+df_spearman = pd.DataFrame(columns = list(X.columns[:7]))
+corr_obs=[]
+corr_preles=[]
+corr_nn_obs=[]
+corr_nn_preles=[]
+for i in range(7):
+        corr_obs.append(spearmanr(X_P2.to_numpy()[:,i], Y_P2.to_numpy().squeeze(1))[0])
+        corr_preles.append(spearmanr(X_P2.to_numpy()[:,i], Y_Preles_P2.to_numpy().squeeze(1))[0])
+        corr_nn_obs.append(spearmanr(X_P2.to_numpy()[:,i], np.mean(preds_d1m2, axis=0))[0])
+        corr_nn_preles.append(spearmanr(X_P2.to_numpy()[:,i], np.mean(preds_d2m2, axis=0))[0])
+        
+df_length = len(df_spearman)
+df_spearman.loc[df_length] = corr_obs
+df_length = len(df_spearman)
+df_spearman.loc[df_length] = corr_preles
+df_length = len(df_spearman)
+df_spearman.loc[df_length] = corr_nn_obs
+df_length = len(df_spearman)
+df_spearman.loc[df_length] = corr_nn_preles
+df_spearman["target"] = ["obs", "preds_preles", "preds_nn_obs","preds_nn_preles"]
+df_spearman.to_excel(r"results/spearmans_correlation.xlsx")
+df_spearman.to_csv(r"results/spearmans_correlation.csv")
+#%%
 def fit_with_moving_window(windowsize, seq_len):
     
     hparams_setting = {"epochs":400,
@@ -244,19 +306,36 @@ df3 = fit_by_year()
 df1 = fit_with_moving_window(365, 365)
 df2 = fit_with_increasing_windowsize(90, max_len = 100)
 #%%
-df3 = pd.read_csv(r"results/fit_by_year.csv")
-df3["mae_diff_d1"] = (df3["mae_d1m1"]-df3["mae_d1m2"])#/(df3.max()["mae_d1m1"]-df3.min()["mae_d1m2"])
-df3["mae_diff_d2"] = (df3["mae_d2m1"]-df3["mae_d2m2"])#/(df3.max()["mae_d2m1"]-df3.min()["mae_d2m2"])
+df3 = pd.read_csv(r"results/fit_with_increasing_windowsize.csv")
+df3["mae_diff_d1"] = abs(df3["mae_d1m1"]-df3["mae_d1m2"])#/(df3.max()["mae_d1m1"]-df3.min()["mae_d1m2"])
+df3["mae_diff_d2"] = abs(df3["mae_d2m1"]-df3["mae_d2m2"])#/(df3.max()["mae_d2m1"]-df3.min()["mae_d2m2"])
 df3["mae_diff_d1_scaled"] = (df3["mae_diff_d1"]-df3.min()["mae_diff_d1"])/(df3.max()["mae_diff_d1"]-df3.min()["mae_diff_d1"])
 df3["mae_diff_d2_scaled"] = (df3["mae_diff_d2"]-df3.min()["mae_diff_d2"])/(df3.max()["mae_diff_d2"]-df3.min()["mae_diff_d2"])
 #%%
-plt.plot(df3["mae_diff_d1"], color="red", label = "Observed GPP")
-plt.plot(df3["mae_diff_d2"], color="blue", label = "Simulated GPP")
+df3 = df3[10:]
+plt.plot(df3["windowsize"], df3["mae_diff_d1"], color="red", label = "$\widehat{D1P2}$")
+plt.plot(df3["windowsize"], df3["mae_diff_d2"], color="blue", label = "$\widehat{D2P2}$")
+plt.ylabel("MAE$_{m1}$ - MAE$_{m2}$")
+plt.xlabel("Amount of datapoints in P1,P2")
 plt.legend()
 #%%
 plt.plot(df3["mae_diff_d1_scaled"], color="red", label = "Observed GPP")
 plt.plot(df3["mae_diff_d2_scaled"], color="blue", label = "Simulated GPP")
 plt.legend()
+#%%
+plt.scatter(df3["mae_d1m1"], df3["mae_d1m2"], c=df3["windowsize"], label="$\widehat{D1P2}$")#, color="red")
+plt.scatter(df3["mae_d2m1"], df3["mae_d2m2"], c=df3["windowsize"], label="$\widehat{D2P2}$")#, color="blue")
+plt.xlabel("MAE$_{m1}$ (Trained on P1)")
+plt.ylabel("MAE$_{m2}$  (Trained on P2)")
+plt.xlim(0. ,2.5)
+plt.ylim(0. ,2.5)
+plt.colorbar()
+plt.gca().set_aspect('equal', adjustable='box')
+plt.legend()
+axes = plt.gca()
+x_vals = np.array(axes.get_xlim())
+y_vals = 0 + 1 * x_vals
+plt.plot(x_vals, y_vals, '--', c="black")
 #%%
 df = pd.read_csv(r"results/fit_with_increasing_windowsize.csv")
 df["mae_diff_d1"] = (df["mae_d1m1"]-df["mae_d1m2"])/(df.max()["mae_d1m1"]-df.min()["mae_d1m2"])
