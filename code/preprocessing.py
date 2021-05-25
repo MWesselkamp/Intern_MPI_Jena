@@ -57,12 +57,13 @@ def standardize_data(X):
     return X_scaled
         
 #%%
-def preprocessing():
+def preprocessing(standardize=True):
     
     X, Y, Y_Preles = load_data()
     X = modify_data(X)
     X = subset_data(X)
-    X = standardize_data(X)
+    if standardize:
+        X = standardize_data(X)
     
     return X, Y, Y_Preles
 
@@ -78,9 +79,16 @@ def split_by_year(X, Y, Y_Preles,
     return X, Y, Y_Preles
 
 #%%
-def split_by_sequence(X, Y, Y_Preles,start, stop):
+def split_by_sequence(X, Y, Y_Preles,start, stop, other = None):
     
-    X = X.drop(["year"], axis=1)
+    try:
+        X = X.drop(["year"], axis=1)
+    except:
+        pass
     X, Y, Y_Preles = X[start:stop], Y[start:stop], Y_Preles[start:stop]
         
-    return X, Y, Y_Preles
+    if other is not None:
+        other = other[:,start:stop]
+        return X, Y, Y_Preles, other
+    else:
+        return X, Y, Y_Preles

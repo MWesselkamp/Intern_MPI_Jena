@@ -38,6 +38,8 @@ import random_search
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.stats import pearsonr
+from scipy.stats import spearmanr
 #%%
 X, Y, Y_Preles = preprocessing.preprocessing()
 #%% Split data by years
@@ -98,9 +100,6 @@ for name, param in model_d1p1.named_parameters():
     weights.append(param)
     print(param.shape)
     print(name)
-#%%
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
 
 #%%
 df_pearsons = pd.DataFrame(columns = list(X.columns[:7]))
@@ -148,6 +147,47 @@ df_spearman.loc[df_length] = corr_nn_preles
 df_spearman["target"] = ["obs", "preds_preles", "preds_nn_obs","preds_nn_preles"]
 df_spearman.to_excel(r"results/spearmans_correlation.xlsx")
 df_spearman.to_csv(r"results/spearmans_correlation.csv")
+#%%
+#df_pearsons = pd.DataFrame(columns = list(X.columns[:7]))
+windowsize = 30
+corr_obs_tair=[]
+corr_preles_tair=[]
+corr_obs_tair_nn =[]
+for i in range(365):
+    X_window , Y_window, Y_Preles_window, preds_window = preprocessing.split_by_sequence(X_P2, Y_P2, Y_Preles_P2,
+                                                    start = i, stop=i+windowsize,other = preds_d1m2 )
+    
+    #corr_nn_obs=[]
+    #corr_nn_preles=[]
+    preds_window = np.mean(preds_window, axis=0)
+    #for i in range(7)        
+    corr_obs_tair.append(pearsonr(X_window.to_numpy()[:,3], Y_window.to_numpy().squeeze(1))[0])
+    corr_preles_tair.append(pearsonr(X_window.to_numpy()[:,3], Y_Preles_window.to_numpy().squeeze(1))[0])
+    corr_obs_tair_nn.append(pearsonr(X_window.to_numpy()[:,3], preds_window)[0])
+    
+    #corr_nn_obs.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d1m2, axis=0))[0])
+    #corr_nn_preles.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d2m2, axis=0)))
+
+#    df_length = len(df_pearsons)
+#    df_pearsons.loc[df_length] = corr_obs
+#    df_length = len(df_pearsons)
+#    df_pearsons.loc[df_length] = corr_preles
+    #df_length = len(df_pearsons)
+    #df_pearsons.loc[df_length] = corr_nn_obs
+    #df_length = len(df_pearsons)
+    #df_pearsons.loc[df_length] = corr_nn_preles
+#    df_pearsons["target"] = ["obs", "preds_preles"]#, "preds_nn_obs","preds_nn_preles"]
+#    df_pearsons.to_excel(r"results/persons_correlation.xlsx")
+#    df_pearsons.to_csv(r"results/persons_correlation.csv")
+#%%
+plt.plot(corr_obs_tair, label="Observations")
+plt.plot(corr_preles_tair, label="Preles simulations")
+plt.plot(corr_obs_tair_nn, label="NN simulations")
+plt.ylim(-1, 1)
+plt.legend()
+plt.ylabel("Pearson's r: Precip")
+plt.xlabel("Day of year (2002)")
+
 #%%
 def fit_with_moving_window(windowsize, seq_len):
     
