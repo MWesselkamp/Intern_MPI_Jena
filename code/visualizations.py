@@ -39,12 +39,24 @@ def plot_predictions(Y, preds1, preds2, mae1, mae2):
     plt.xlabel("Day")
     plt.ylim(-1,21)
     plt.legend(loc = "upper left")
-    plt.text(200, 19, f"MAE difference: {np.round(abs(np.mean(mae1)-np.mean(mae2)), 2)}")
+    #plt.text(200, 19, f"MAE difference: {np.round(abs(np.mean(mae1)-np.mean(mae2)), 2)}")
+    #plt.gca().set_aspect('equal', adjustable='box')
     #plt.text(200, 18, f"MAE difference: {np.round(abs(np.mean(nse1)-np.mean(nse2)), 2)}")
     #plt.text(250, 15, f"MAE_m2: {np.round(np.mean(mae_m2), 4)}")
     print("Extrapolation error:", np.mean(mae1))
     print("Training error:", np.mean(mae2))
     print("Absolute difference:", abs(np.mean(mae1)-np.mean(mae2)))
+    
+def plot_prediction_differences(preds_d1m2, preds_d1m1):
+    fig, ax = plt.subplots()
+    err = np.transpose(preds_d1m2)-np.transpose(preds_d1m1)
+    print(np.sum(err))
+    CI = np.quantile(err, (0.05,0.95),axis=1)
+    ax.fill_between(np.arange(len(err)), CI[0],CI[1], color="salmon", alpha=0.5)
+    ax.plot(np.mean(err, axis=1), color="red", label = "$\widehat{P2_{m2}} - \widehat{P2_{m1}}$", linewidth=1.0)
+    ax.set_ylabel("GPP [g C m$^{-2}$ day$^{-1}$] ")
+    ax.set_xlabel("Day of year")
+    ax.legend()
     
     #%%
 def plot_running_losses(train_loss, val_loss, 

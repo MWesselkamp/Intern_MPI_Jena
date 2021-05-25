@@ -20,13 +20,14 @@ Inter-annual variability of NN-predicted GPP.
 #%% Set working directory
 import os
 print("Current Working Directory " , os.getcwd())
-os.chdir("/Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena") 
+#%%
+os.chdir("/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena") 
 print("Current Working Directory " , os.getcwd())
 
 #%% Set system path
 import sys
 print(sys.path)
-sys.path.append('/Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena/code')
+sys.path.append('/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena/code')
 
 #%% Import packages
 import preprocessing
@@ -75,19 +76,22 @@ running_losses_d2p1 = training.train(hparams_setting, model_design, X_P1.to_nump
 running_losses_d2p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
 #%%
 visualizations.plot_running_losses(running_losses_d1p1["mae_train"], running_losses_d1p1["mae_val"])
-#%% Predict with fitted models to P2.
+#%% Predict with fitted models to D1P2.
 preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
 preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
 
-visualizations.plot_predictions(Y_P2, preds_d1m1, preds_d1m2, mae_d1m1, mae_d1m2)
-#%% 
+#%%
+visualizations.plot_predictions(Y_P2, preds_d1m1, preds_d1m2, mae_d1m1, mae_d1m2) 
 visualizations.plot_running_losses(running_losses_d2p1["mae_train"], running_losses_d2p1["mae_val"])
-#%% Predict with fitted models to P2.
+#%%
+visualizations.plot_prediction_differences(preds_d1m2, preds_d1m1)
+
+#%% Predict with fitted models to D2P2.
 preds_d2m1, mae_d2m1, nse_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P1")
 preds_d2m2, mae_d2m2, nse_d2m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
-
+#%%
 visualizations.plot_predictions(Y_Preles_P2, preds_d2m1, preds_d2m2, mae_d2m1, mae_d2m2)
-
+visualizations.plot_prediction_differences(preds_d2m1, preds_d2m2)
 #%%
 import torch
 import models 
