@@ -53,13 +53,15 @@ def plot_prediction_differences(preds_d1m2, preds_d1m1):
     print(np.sum(err))
     CI = np.quantile(err, (0.05,0.95),axis=1)
     ax.fill_between(np.arange(len(err)), CI[0],CI[1], color="salmon", alpha=0.5)
-    ax.plot(np.mean(err, axis=1), color="red", label = "$\widehat{P2_{m2}} - \widehat{P2_{m1}}$", linewidth=1.0)
+    ax.plot(np.mean(err, axis=1), color="red", label = "$\widehat{P2_{diff}}$", linewidth=1.0)
     ax.set_ylabel("GPP [g C m$^{-2}$ day$^{-1}$] ")
     ax.set_xlabel("Day of year")
-    ax.legend()
+    ax.legend(loc="upper left")
+    ax.ylim(-4,4)
     
     #%%
 def plot_running_losses(train_loss, val_loss, 
+                        labels = ["Training loss", "Test loss"],
                         plot_train_loss =True,
                         legend=True,
                         colors=["blue", "lightblue"],
@@ -79,20 +81,22 @@ def plot_running_losses(train_loss, val_loss,
     if train_loss.shape[0] > 1:
         ci_train = np.quantile(train_loss, (0.05,0.95), axis=0)
         ci_val = np.quantile(val_loss, (0.05,0.95), axis=0)
+        print(np.transpose(ci_train)[-1])
+        print(np.transpose(ci_val)[-1])
         train_loss = np.mean(train_loss, axis=0)
         val_loss = np.mean(val_loss, axis=0)
         
         if plot_train_loss:
-            ax.fill_between(np.arange(len(train_loss)), ci_train[0],ci_train[1], color=colors[1], alpha=0.3)
-        ax.fill_between(np.arange(len(train_loss)), ci_val[0],ci_val[1], color=colors_test_loss[1], alpha=0.3)
+            ax.fill_between(np.arange(len(train_loss)), ci_train[0],ci_train[1], color=colors[1], alpha=0.5)
+        ax.fill_between(np.arange(len(train_loss)), ci_val[0],ci_val[1], color=colors_test_loss[1], alpha=0.5)
     
     else: 
         train_loss = train_loss.reshape(-1,1)
         val_loss = val_loss.reshape(-1,1)
     
     if plot_train_loss:
-        ax.plot(train_loss, color=colors[0], label="Training loss", linewidth=1.2)
-        ax.plot(val_loss, color="green", label = "Test loss", linewidth=1.2)
+        ax.plot(train_loss, color=colors[0], label=labels[0], linewidth=1.2)
+        ax.plot(val_loss, color=colors_test_loss[0], label = labels[1], linewidth=1.2)
     else:
         ax.plot(val_loss, color=colors_test_loss[0], label = "Test loss\nfull re-training", linewidth=1.2)
     #ax[1].plot(train_loss, color="green", linewidth=0.8)
@@ -106,4 +110,4 @@ def plot_running_losses(train_loss, val_loss,
                     tick.label.set_fontsize(18) 
     plt.rcParams.update({'font.size': 20})
     if legend:
-        fig.legend(loc="upper right")
+        fig.legend()

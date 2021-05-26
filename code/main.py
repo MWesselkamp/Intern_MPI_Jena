@@ -43,7 +43,13 @@ from scipy.stats import pearsonr
 from scipy.stats import spearmanr
 #%%
 X, Y, Y_Preles = preprocessing.preprocessing()
-#%% Split data by years
+
+X_P1s , Y_P1s, Y_Preles_P1s = preprocessing.split_by_year(X, Y, Y_Preles,
+                                                    years = [2001])
+X_P2s , Y_P2s, Y_Preles_P2s = preprocessing.split_by_year(X, Y, Y_Preles,
+                                                    years = [2002])
+
+
 X_P1 , Y_P1, Y_Preles_P1 = preprocessing.split_by_year(X, Y, Y_Preles,
                                                     years = [2001, 2002])
 X_P2 , Y_P2, Y_Preles_P2 = preprocessing.split_by_year(X, Y, Y_Preles,
@@ -61,7 +67,7 @@ if randomsearch:
 else:
     layersizes = [7,32,32,16,1]
     hparams = [0.005, 16]
-#%%
+
 hparams_setting = {"epochs":1000,
            "batchsize":hparams[1],
            "learningrate":hparams[0],
@@ -74,8 +80,18 @@ running_losses_d1p2 = training.train(hparams_setting, model_design, X_P2.to_nump
 
 running_losses_d2p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_Preles_P1.to_numpy(), "D2P1")
 running_losses_d2p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
+
+#running_losses_d1p1s = training.train(hparams_setting, model_design, X_P1s.to_numpy(), Y_P1s.to_numpy(), "D1P1")
+#running_losses_d1p2s = training.train(hparams_setting, model_design, X_P2s.to_numpy(), Y_P2s.to_numpy(), "D1P2")
+
+#running_losses_d2p1s = training.train(hparams_setting, model_design, X_P1s.to_numpy(), Y_Preles_P1s.to_numpy(), "D2P1")
+#running_losses_d2p2s = training.train(hparams_setting, model_design, X_P2s.to_numpy(), Y_Preles_P2s.to_numpy(), "D2P2")
 #%%
 visualizations.plot_running_losses(running_losses_d1p1["mae_train"], running_losses_d1p1["mae_val"])
+#%%
+#visualizations.plot_running_losses(running_losses_d1p1s["mae_val"], running_losses_d1p1["mae_val"], labels = ["365 data points", "730 data points"])
+#%%
+#visualizations.plot_running_losses(running_losses_d2p1s["mae_val"], running_losses_d2p1["mae_val"], labels = ["365 data points", "730 data points"])
 #%% Predict with fitted models to D1P2.
 preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
 preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
@@ -358,20 +374,20 @@ df3["mae_diff_d1_scaled"] = (df3["mae_diff_d1"]-df3.min()["mae_diff_d1"])/(df3.m
 df3["mae_diff_d2_scaled"] = (df3["mae_diff_d2"]-df3.min()["mae_diff_d2"])/(df3.max()["mae_diff_d2"]-df3.min()["mae_diff_d2"])
 #%%
 df3 = df3[10:]
-plt.plot(df3["windowsize"], df3["mae_diff_d1"], color="red", label = "$\widehat{D1P2}$")
-plt.plot(df3["windowsize"], df3["mae_diff_d2"], color="blue", label = "$\widehat{D2P2}$")
-plt.ylabel("MAE$_{m1}$ - MAE$_{m2}$")
-plt.xlabel("Amount of datapoints in P1,P2")
+plt.plot(df3["windowsize"], df3["mae_diff_d1"], color="forestgreen", label = "$D1$")
+plt.plot(df3["windowsize"], df3["mae_diff_d2"], color="blue", label = "$D2$")
+plt.ylabel("MAE$_{P2_{diff}}$")
+plt.xlabel("Data points in P1,P2")
 plt.legend()
 #%%
 plt.plot(df3["mae_diff_d1_scaled"], color="red", label = "Observed GPP")
 plt.plot(df3["mae_diff_d2_scaled"], color="blue", label = "Simulated GPP")
 plt.legend()
 #%%
-plt.scatter(df3["mae_d1m1"], df3["mae_d1m2"], c=df3["windowsize"], label="$\widehat{D1P2}$")#, color="red")
-plt.scatter(df3["mae_d2m1"], df3["mae_d2m2"], c=df3["windowsize"], label="$\widehat{D2P2}$")#, color="blue")
-plt.xlabel("MAE$_{m1}$ (Trained on P1)")
-plt.ylabel("MAE$_{m2}$  (Trained on P2)")
+plt.scatter(df3["mae_d1m1"], df3["mae_d1m2"], c=df3["windowsize"], label="$D1$")#, color="red")
+plt.scatter(df3["mae_d2m1"], df3["mae_d2m2"], c=df3["windowsize"], label="$D2$")#, color="blue")
+plt.xlabel("MAE$_{P2_{m1}}$ ")
+plt.ylabel("MAE$_{P2_{m2}}$")
 plt.xlim(0. ,2.5)
 plt.ylim(0. ,2.5)
 plt.colorbar()
