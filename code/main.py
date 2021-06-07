@@ -81,17 +81,17 @@ running_losses_d1p2 = training.train(hparams_setting, model_design, X_P2.to_nump
 running_losses_d2p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_Preles_P1.to_numpy(), "D2P1")
 running_losses_d2p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P2")
 
-#running_losses_d1p1s = training.train(hparams_setting, model_design, X_P1s.to_numpy(), Y_P1s.to_numpy(), "D1P1")
-#running_losses_d1p2s = training.train(hparams_setting, model_design, X_P2s.to_numpy(), Y_P2s.to_numpy(), "D1P2")
+#running_losses_d1p1s = training.train(hparams_setting, model_design, X_P1s.to_numpy(), Y_P1s.to_numpy(), "D1P1s")
+#running_losses_d1p2s = training.train(hparams_setting, model_design, X_P2s.to_numpy(), Y_P2s.to_numpy(), "D1P2s")
 
-#running_losses_d2p1s = training.train(hparams_setting, model_design, X_P1s.to_numpy(), Y_Preles_P1s.to_numpy(), "D2P1")
-#running_losses_d2p2s = training.train(hparams_setting, model_design, X_P2s.to_numpy(), Y_Preles_P2s.to_numpy(), "D2P2")
+#running_losses_d2p1s = training.train(hparams_setting, model_design, X_P1s.to_numpy(), Y_Preles_P1s.to_numpy(), "D2P1s")
+#running_losses_d2p2s = training.train(hparams_setting, model_design, X_P2s.to_numpy(), Y_Preles_P2s.to_numpy(), "D2P2s")
 #%%
 visualizations.plot_running_losses(running_losses_d1p1["mae_train"], running_losses_d1p1["mae_val"])
 #%%
 #visualizations.plot_running_losses(running_losses_d1p1s["mae_val"], running_losses_d1p1["mae_val"], labels = ["365 data points", "730 data points"])
-#%%
 #visualizations.plot_running_losses(running_losses_d2p1s["mae_val"], running_losses_d2p1["mae_val"], labels = ["365 data points", "730 data points"])
+
 #%% Predict with fitted models to D1P2.
 preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
 preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
@@ -169,24 +169,25 @@ df_spearman.to_excel(r"results/spearmans_correlation.xlsx")
 df_spearman.to_csv(r"results/spearmans_correlation.csv")
 #%%
 #df_pearsons = pd.DataFrame(columns = list(X.columns[:7]))
+
+
 windowsize = 30
 corr_obs_tair=[]
 corr_preles_tair=[]
 corr_obs_tair_nn =[]
-for i in range(365):
-    X_window , Y_window, Y_Preles_window, preds_window = preprocessing.split_by_sequence(X_P2, Y_P2, Y_Preles_P2,
-                                                    start = i, stop=i+windowsize,other = preds_d1m2 )
+X_window , Y_window, Y_Preles_window, preds_window = preprocessing.split_by_sequence(X_P2, Y_P2, Y_Preles_P2,
+                                                start = i, stop=i+windowsize,other = preds_d1m2 )
     
-    #corr_nn_obs=[]
-    #corr_nn_preles=[]
-    preds_window = np.mean(preds_window, axis=0)
-    #for i in range(7)        
-    corr_obs_tair.append(pearsonr(X_window.to_numpy()[:,3], Y_window.to_numpy().squeeze(1))[0])
-    corr_preles_tair.append(pearsonr(X_window.to_numpy()[:,3], Y_Preles_window.to_numpy().squeeze(1))[0])
-    corr_obs_tair_nn.append(pearsonr(X_window.to_numpy()[:,3], preds_window)[0])
+#corr_nn_obs=[]
+#corr_nn_preles=[]
+preds_window = np.mean(preds_window, axis=0)
+#for i in range(7)        
+corr_obs_tair.append(pearsonr(X_window.to_numpy()[:,3], Y_window.to_numpy().squeeze(1))[0])
+corr_preles_tair.append(pearsonr(X_window.to_numpy()[:,3], Y_Preles_window.to_numpy().squeeze(1))[0])
+corr_obs_tair_nn.append(pearsonr(X_window.to_numpy()[:,3], preds_window)[0])
     
-    #corr_nn_obs.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d1m2, axis=0))[0])
-    #corr_nn_preles.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d2m2, axis=0)))
+#corr_nn_obs.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d1m2, axis=0))[0])
+#corr_nn_preles.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d2m2, axis=0)))
 
 #    df_length = len(df_pearsons)
 #    df_pearsons.loc[df_length] = corr_obs

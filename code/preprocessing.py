@@ -69,11 +69,13 @@ def preprocessing(standardize=True):
 
 #%%
 def split_by_year(X, Y, Y_Preles, 
-               years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012]):
+               years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012],
+               drop_year = True):
     
     row_ind = X["year"].isin(years)
-    print(f"Returns valid years from {years} in \n", X["year"].unique())
-    X = X.drop(["year"], axis=1)
+    #print(f"Returns valid years from {years} in \n", X["year"].unique())
+    if drop_year:
+        X = X.drop(["year"], axis=1)
     X, Y, Y_Preles = X[row_ind], Y[row_ind], Y_Preles[row_ind]
         
     return X, Y, Y_Preles
