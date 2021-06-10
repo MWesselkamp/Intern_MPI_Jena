@@ -73,7 +73,11 @@ hparams_setting = {"epochs":1000,
            "learningrate":hparams[0],
            "history":1}
 model_design = {"layer_sizes":layersizes}
+#%%
+font = {'size'   : 18,
+        'weight' : 'normal'}
 
+plt.rc('font', **font)
 #%% Train m1 and m2 on D1P1 and D1P2 and on D2P1 and D2P2
 running_losses_d1p1 = training.train(hparams_setting, model_design, X_P1.to_numpy(), Y_P1.to_numpy(), "D1P1")
 running_losses_d1p2 = training.train(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(), "D1P2")
@@ -96,12 +100,11 @@ visualizations.plot_running_losses(running_losses_d1p1["mae_train"], running_los
 preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
 preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
 
-#%%
 visualizations.plot_running_losses(running_losses_d2p1["mae_train"], running_losses_d2p1["mae_val"])
 #%%
-visualizations.plot_predictions(Y_P2[:365], preds_d1m1[:,:365], preds_d1m2[:,:365], mae_d1m1, mae_d1m2) 
+visualizations.plot_predictions(Y_P2, preds_d1m1, preds_d1m2, mae_d1m1, mae_d1m2) 
 
-visualizations.plot_prediction_differences(preds_d1m2[:,:365], preds_d1m1[:,:365])
+visualizations.plot_prediction_differences(preds_d1m2, preds_d1m1)
 
 #%% Predict with fitted models to D2P2.
 preds_d2m1, mae_d2m1, nse_d2m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_Preles_P2.to_numpy(), "D2P1")
@@ -122,93 +125,6 @@ for name, param in model_d1p1.named_parameters():
     print(param.shape)
     print(name)
 
-#%%
-df_pearsons = pd.DataFrame(columns = list(X.columns[:7]))
-corr_obs=[]
-corr_preles=[]
-corr_nn_obs=[]
-corr_nn_preles=[]
-for i in range(7):
-        corr_obs.append(pearsonr(X_P2.to_numpy()[:,i], Y_P2.to_numpy().squeeze(1))[0])
-        corr_preles.append(pearsonr(X_P2.to_numpy()[:,i], Y_Preles_P2.to_numpy().squeeze(1))[0])
-        corr_nn_obs.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d1m2, axis=0))[0])
-        corr_nn_preles.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d2m2, axis=0))[0])
-        
-df_length = len(df_pearsons)
-df_pearsons.loc[df_length] = corr_obs
-df_length = len(df_pearsons)
-df_pearsons.loc[df_length] = corr_preles
-df_length = len(df_pearsons)
-df_pearsons.loc[df_length] = corr_nn_obs
-df_length = len(df_pearsons)
-df_pearsons.loc[df_length] = corr_nn_preles
-df_pearsons["target"] = ["obs", "preds_preles", "preds_nn_obs","preds_nn_preles"]
-df_pearsons.to_excel(r"results/persons_correlation.xlsx")
-df_pearsons.to_csv(r"results/persons_correlation.csv")
-#%%
-df_spearman = pd.DataFrame(columns = list(X.columns[:7]))
-corr_obs=[]
-corr_preles=[]
-corr_nn_obs=[]
-corr_nn_preles=[]
-for i in range(7):
-        corr_obs.append(spearmanr(X_P2.to_numpy()[:,i], Y_P2.to_numpy().squeeze(1))[0])
-        corr_preles.append(spearmanr(X_P2.to_numpy()[:,i], Y_Preles_P2.to_numpy().squeeze(1))[0])
-        corr_nn_obs.append(spearmanr(X_P2.to_numpy()[:,i], np.mean(preds_d1m2, axis=0))[0])
-        corr_nn_preles.append(spearmanr(X_P2.to_numpy()[:,i], np.mean(preds_d2m2, axis=0))[0])
-        
-df_length = len(df_spearman)
-df_spearman.loc[df_length] = corr_obs
-df_length = len(df_spearman)
-df_spearman.loc[df_length] = corr_preles
-df_length = len(df_spearman)
-df_spearman.loc[df_length] = corr_nn_obs
-df_length = len(df_spearman)
-df_spearman.loc[df_length] = corr_nn_preles
-df_spearman["target"] = ["obs", "preds_preles", "preds_nn_obs","preds_nn_preles"]
-df_spearman.to_excel(r"results/spearmans_correlation.xlsx")
-df_spearman.to_csv(r"results/spearmans_correlation.csv")
-#%%
-#df_pearsons = pd.DataFrame(columns = list(X.columns[:7]))
-
-
-windowsize = 30
-corr_obs_tair=[]
-corr_preles_tair=[]
-corr_obs_tair_nn =[]
-X_window , Y_window, Y_Preles_window, preds_window = preprocessing.split_by_sequence(X_P2, Y_P2, Y_Preles_P2,
-                                                start = i, stop=i+windowsize,other = preds_d1m2 )
-    
-#corr_nn_obs=[]
-#corr_nn_preles=[]
-preds_window = np.mean(preds_window, axis=0)
-#for i in range(7)        
-corr_obs_tair.append(pearsonr(X_window.to_numpy()[:,3], Y_window.to_numpy().squeeze(1))[0])
-corr_preles_tair.append(pearsonr(X_window.to_numpy()[:,3], Y_Preles_window.to_numpy().squeeze(1))[0])
-corr_obs_tair_nn.append(pearsonr(X_window.to_numpy()[:,3], preds_window)[0])
-    
-#corr_nn_obs.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d1m2, axis=0))[0])
-#corr_nn_preles.append(pearsonr(X_P2.to_numpy()[:,i], np.mean(preds_d2m2, axis=0)))
-
-#    df_length = len(df_pearsons)
-#    df_pearsons.loc[df_length] = corr_obs
-#    df_length = len(df_pearsons)
-#    df_pearsons.loc[df_length] = corr_preles
-    #df_length = len(df_pearsons)
-    #df_pearsons.loc[df_length] = corr_nn_obs
-    #df_length = len(df_pearsons)
-    #df_pearsons.loc[df_length] = corr_nn_preles
-#    df_pearsons["target"] = ["obs", "preds_preles"]#, "preds_nn_obs","preds_nn_preles"]
-#    df_pearsons.to_excel(r"results/persons_correlation.xlsx")
-#    df_pearsons.to_csv(r"results/persons_correlation.csv")
-#%%
-plt.plot(corr_obs_tair, label="Observations")
-plt.plot(corr_preles_tair, label="Preles simulations")
-plt.plot(corr_obs_tair_nn, label="NN simulations")
-plt.ylim(-1, 1)
-plt.legend()
-plt.ylabel("Pearson's r: Precip")
-plt.xlabel("Day of year (2002)")
 
 #%%
 def fit_with_moving_window(windowsize, seq_len):
@@ -369,7 +285,7 @@ df1 = fit_with_moving_window(730, 365)
 #%%
 df2 = fit_with_increasing_windowsize(90, max_len = 100)
 #%%
-df3 = pd.read_csv(r"results/fit_with_increasing_windowsize.csv")
+df3 = pd.read_csv(r"results/fit_by_year.csv")
 df3["mae_diff_d1"] = abs(df3["mae_d1m1"]-df3["mae_d1m2"])#/(df3.max()["mae_d1m1"]-df3.min()["mae_d1m2"])
 df3["mae_diff_d2"] = abs(df3["mae_d2m1"]-df3["mae_d2m2"])#/(df3.max()["mae_d2m1"]-df3.min()["mae_d2m2"])
 df3["mae_diff_d1_scaled"] = (df3["mae_diff_d1"]-df3.min()["mae_diff_d1"])/(df3.max()["mae_diff_d1"]-df3.min()["mae_diff_d1"])
@@ -382,16 +298,27 @@ plt.ylabel("MAE$_{P2_{diff}}$")
 plt.xlabel("Data points in P1,P2")
 plt.legend()
 #%%
-plt.plot(df3["mae_diff_d1_scaled"], color="red", label = "Observed GPP")
-plt.plot(df3["mae_diff_d2_scaled"], color="blue", label = "Simulated GPP")
-plt.legend()
+df_bp1 = df3[["mae_diff_d1", "mae_diff_d2"]]
+df_bp2 = df3[["mae_diff_d1_scaled", "mae_diff_d2_scaled"]]
 #%%
+plt.plot(figsize=(3,5))
+plt.boxplot(df_bp1, labels=["D$_{observed}$", "D$_{preles}$"], showmeans = True, )
+#plt.ylim(-0.1,1.1)
+plt.ylabel("Biotic effect size ($\epsilon$)")
+#%%
+plt.subplot(1, 2, 2)
+plt.boxplot(df_bp2, labels=["D$_{obs}$", "D$_{pre}$"])
+plt.ylim(-0.1,1.1)
+plt.ylabel("Scaled difference in MAEs")
+plt.tight_layout(pad=1.0)
+#%%
+df3 = pd.read_csv(r"results/fit_with_increasing_windowsize.csv")
+
 plt.scatter(df3["mae_d1m1"], df3["mae_d1m2"], c=df3["windowsize"], label="$D1$")#, color="red")
-plt.scatter(df3["mae_d2m1"], df3["mae_d2m2"], c=df3["windowsize"], label="$D2$")#, color="blue")
-plt.xlabel("MAE$_{P2_{m1}}$ ")
-plt.ylabel("MAE$_{P2_{m2}}$")
-plt.xlim(0. ,2.5)
-plt.ylim(0. ,2.5)
+plt.xlabel("$\epsilon_{m1}$")
+plt.ylabel("$\epsilon_{m2}$")
+plt.xlim(0. ,1.5)
+plt.ylim(0. ,1.5)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
 #plt.legend()
@@ -399,6 +326,20 @@ axes = plt.gca()
 x_vals = np.array(axes.get_xlim())
 y_vals = 0 + 1 * x_vals
 plt.plot(x_vals, y_vals, '--', c="black")
+#%%
+plt.scatter(df3["mae_d2m1"], df3["mae_d2m2"], c=df3["windowsize"], label="$D2$")#, color="blue")
+plt.xlabel("$\epsilon_{m1}$")
+plt.ylabel("$\epsilon_{m2}$")
+plt.xlim(0. ,1.5)
+plt.ylim(0. ,1.5)
+plt.colorbar()
+plt.gca().set_aspect('equal', adjustable='box')
+#plt.legend()
+axes = plt.gca()
+x_vals = np.array(axes.get_xlim())
+y_vals = 0 + 1 * x_vals
+plt.plot(x_vals, y_vals, '--', c="black")
+
 #%%
 df = pd.read_csv(r"results/fit_with_increasing_windowsize.csv")
 df["mae_diff_d1"] = (df["mae_d1m1"]-df["mae_d1m2"])/(df.max()["mae_d1m1"]-df.min()["mae_d1m2"])
