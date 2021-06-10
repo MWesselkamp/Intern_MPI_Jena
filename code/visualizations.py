@@ -29,16 +29,19 @@ def plot_data(Obs, Sim, first = True,
 #%%
 def plot_predictions(Y, preds1, preds2, mae1, mae2):
     
-    plt.plot(Y.to_numpy(), color="black", label="P2")
+    fig, ax = plt.subplots(figsize=(8,6), dpi=100)
+    fig.tight_layout(pad=1.5)
+    
+    ax.plot(Y.to_numpy(), color="black", label="P2", linewidth=0.8)
     #for i in range(5):
-    plt.plot(np.mean(preds1, axis=0), color = "lightgreen", alpha = 1, linewidth=0.8, label="$\widehat{P2}_{m1}$")
+    ax.plot(np.mean(preds1, axis=0), color = "forestgreen", alpha = 1, linewidth=0.9, label="$\widehat{P2}_{m1}$")
     #plt.plot(Y_P2.to_numpy(), color="black")
     #for i in range(5):
-    plt.plot(np.mean(preds2, axis=0), color = "lightblue", alpha = 1, linewidth=0.8, label="$\widehat{P2}_{m2}$")
-    plt.ylabel("GPP [g C m$^{-2}$ day$^{-1}$]")
-    plt.xlabel("Day")
-    plt.ylim(-1,21)
-    plt.legend(loc = "upper left")
+    ax.plot(np.mean(preds2, axis=0), color = "royalblue", alpha = 1, linewidth=0.9, label="$\widehat{P2}_{m2}$")
+    ax.set_ylabel("GPP [g C m$^{-2}$ day$^{-1}$]")
+    ax.set_xlabel("Day")
+    ax.set_ylim(-1,24)
+    ax.legend(loc = "upper left", ncol=3)
     #plt.text(200, 19, f"MAE difference: {np.round(abs(np.mean(mae1)-np.mean(mae2)), 2)}")
     #plt.gca().set_aspect('equal', adjustable='box')
     #plt.text(200, 18, f"MAE difference: {np.round(abs(np.mean(nse1)-np.mean(nse2)), 2)}")
@@ -48,16 +51,18 @@ def plot_predictions(Y, preds1, preds2, mae1, mae2):
     print("Absolute difference:", abs(np.mean(mae1)-np.mean(mae2)))
     
 def plot_prediction_differences(preds_d1m2, preds_d1m1):
-    fig, ax = plt.subplots()
+    
+    fig, ax = plt.subplots(figsize=(8,6), dpi=100)
+    fig.tight_layout(pad=1.5)
     err = np.transpose(preds_d1m2)-np.transpose(preds_d1m1)
     print(np.sum(err))
     CI = np.quantile(err, (0.05,0.95),axis=1)
     ax.fill_between(np.arange(len(err)), CI[0],CI[1], color="salmon", alpha=0.5)
-    ax.plot(np.mean(err, axis=1), color="red", label = "$\widehat{P2_{diff}}$", linewidth=1.0)
+    ax.plot(np.mean(err, axis=1), color="red", label = "$\widehat{P2}_{m2} - \widehat{P2}_{m1}$", linewidth=1.0)
     ax.set_ylabel("GPP [g C m$^{-2}$ day$^{-1}$] ")
     ax.set_xlabel("Day of year")
-    ax.legend(loc="upper left")
-    ax.ylim(-4,4)
+    ax.legend(loc="lower left")
+    ax.set_ylim(-5,5)
     
     #%%
 def plot_running_losses(train_loss, val_loss, 

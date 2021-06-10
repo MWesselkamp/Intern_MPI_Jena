@@ -10,13 +10,15 @@ Created on Wed Jun  2 11:28:51 2021
 import os
 print("Current Working Directory " , os.getcwd())
 #%%
-os.chdir("/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena") 
+# /Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena
+# /Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena
+os.chdir("/Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena") 
 print("Current Working Directory " , os.getcwd())
 
 #%% Set system path
 import sys
 print(sys.path)
-sys.path.append('/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena/code')
+sys.path.append('/Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena/code')
 
 #%% Import packages
 import preprocessing
@@ -58,14 +60,42 @@ def myfunc(data, agg = "sum"):
     return s
 
 #%%
+def mlp_predictions(randomsearch = False):
+    
+    if randomsearch:
+        layersizes = random_search.architecture_search() # 7,32,32,16,1
+        hparams = random_search.hparams_search(layersizes) # 0.005, 16
+    else:
+        layersizes = [7,32,32,16,1]
+        hparams = [0.005, 16]
+        
+    hparams_setting = {"epochs":1000,
+                       "batchsize":hparams[1],
+                       "learningrate":hparams[0],
+                       "history":1}
+    model_design = {"layer_sizes":layersizes}
+    
+    X, Y, Y_Preles = preprocessing.preprocessing()
+    X = X.drop(["year"], axis=1)
+    
+    running_losses = training.train(hparams_setting, model_design, X.to_numpy(), Y.to_numpy(), "D1")
+    
+    preds, mae, nse = prediction.predict(hparams_setting, model_design, X.to_numpy(), Y.to_numpy(),"D1")
+
+    return preds
+#%%
 def correlation_ts(var, data):
     
     X, Y, Y_Preles = preprocessing.preprocessing()
-
+    preds  = mlp_predictions()
+    Y_NN = np.mean(preds, axis=0)
+    
     if data == "observed":
         X['GPP'] = Y
-    else:
+    elif data == "preles":
         X['GPP'] = Y_Preles
+    elif data == "nn":
+        X['GPP'] = Y_NN
 
     years = list(X['year'].unique())
     corrs = []
@@ -109,11 +139,15 @@ plt.rc('font', **font)
 
 #%%
 def plot_correlations_by_data(var):
-    fig, ax = plt.subplots()    
+    
+    fig, ax = plt.subplots(figsize=(9.5,7))    
     ax.fill_between(np.arange(365), np.quantile(corrs_obs, q=0.05, axis=0),np.quantile(corrs_obs, q=0.95, axis=0), color="salmon", alpha=0.5)
     ax.plot(np.quantile(corrs_obs, q=0.5, axis=0), color="red", label = "GPP$_{obs}$ vs. "+var, linewidth=1.0)
-    ax.fill_between(np.arange(365), np.quantile(corrs_sim, q=0.05, axis=0),np.quantile(corrs_sim, q=0.95, axis=0), color="lightblue", alpha=0.5)
-    ax.plot(np.quantile(corrs_sim, q=0.5, axis=0), color="blue", label = "GPP$_{sim}$ vs. "+var, linewidth=1.0)
+    ax.fill_between(np.arange(365), np.quantile(corrs_preles, q=0.05, axis=0),np.quantile(corrs_preles, q=0.95, axis=0), color="lightblue", alpha=0.5)
+    ax.plot(np.quantile(corrs_preles, q=0.5, axis=0), color="blue", label = "$\widehat{GPP}_{preles}$ vs. "+var, linewidth=1.0)
+    ax.fill_between(np.arange(365), np.quantile(corrs_nn, q=0.05, axis=0),np.quantile(corrs_nn, q=0.95, axis=0), color="lightgreen", alpha=0.5)
+    ax.plot(np.quantile(corrs_nn, q=0.5, axis=0), color="green", label = "$\widehat{GPP}_{nn}$ vs. "+var, linewidth=1.0)
+
     ax.hlines(0, 0, 365, color="black", linestyle='dashed')
     ax.set_ylabel("Correlation coefficent (Pearson's r)")
     ax.set_xlabel("Day of year")
@@ -122,40 +156,23 @@ def plot_correlations_by_data(var):
     
 #%%
 corrs_obs = correlation_ts('TAir', 'observed')
-corrs_sim = correlation_ts('TAir', 'simulated')  
-#%% 
+corrs_preles = correlation_ts('TAir', 'preles')  
+corrs_nn = correlation_ts('TAir', 'nn')  
 plot_correlations_by_data("TAir")
 #%%
 corrs_obs = correlation_ts('PAR', 'observed')
-corrs_sim = correlation_ts('PAR', 'simulated')   
+corrs_preles = correlation_ts('PAR', 'preles')  
+corrs_nn = correlation_ts('PAR', 'nn')  
 plot_correlations_by_data("PAR")
 #%%
 corrs_obs = correlation_ts('Precip', 'observed')
-corrs_sim = correlation_ts('Precip', 'simulated')   
+corrs_preles = correlation_ts('Precip', 'preles')  
+corrs_nn = correlation_ts('Precip', 'nn')  
+#%% 
 plot_correlations_by_data("Precip")
 
 #%%
 corrs_obs = correlation_ts('VPD', 'observed')
-corrs_sim = correlation_ts('VPD', 'simulated')   
+corrs_preles = correlation_ts('VPD', 'preles')  
+corrs_nn = correlation_ts('VPD', 'nn')  
 plot_correlations_by_data("VPD")
-
-#%%
-corrs_PAR = correlation_ts('PAR')
-corrs_VPD = correlation_ts('VPD')
-corrs_Precip = correlation_ts('Precip')
-corrs_fAPAR = correlation_ts('fAPAR')
-#%%
-fig, ax = plt.subplots()
-ax.fill_between(np.arange(365), np.quantile(corrs_Tair, q=0.05, axis=0),np.quantile(corrs_Tair, q=0.95, axis=0), color="salmon", alpha=0.5)
-ax.plot(np.quantile(corrs_Tair, q=0.5, axis=0), color="red", label = "GPP vs. TAir", linewidth=1.0)
-ax.fill_between(np.arange(365), np.quantile(corrs_PAR, q=0.05, axis=0),np.quantile(corrs_PAR, q=0.95, axis=0), color="lightblue", alpha=0.5)
-ax.plot(np.quantile(corrs_PAR, q=0.5, axis=0), color="blue", label = "GPP vs. PAR", linewidth=1.0)
-ax.fill_between(np.arange(365), np.quantile(corrs_VPD, q=0.05, axis=0),np.quantile(corrs_VPD, q=0.95, axis=0), color="lightgreen", alpha=0.5)
-ax.plot(np.mean(corrs_VPD, axis=0), color="green", label = "GPP vs. VPD", linewidth=1.0)
-ax.fill_between(np.arange(365), np.quantile(corrs_Precip, q=0.05, axis=0),np.quantile(corrs_Precip, q=0.95, axis=0), color="moccasin", alpha=0.5)
-ax.plot(np.quantile(corrs_Precip, q=0.5, axis=0), color="orange", label = "GPP vs. Precip", linewidth=1.0)
-ax.hlines(0, 0, 365, color="black", linestyle='dashed')
-ax.set_ylabel("Correlation coefficent (Pearson's r)")
-ax.set_xlabel("Day of year")
-ax.legend(loc="lower right")
-ax.set_ylim(-1,1)
