@@ -99,7 +99,9 @@ visualizations.plot_running_losses(running_losses_d1p1["mae_train"], running_los
 #%% Predict with fitted models to D1P2.
 preds_d1m1, mae_d1m1, nse_d1m1 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P1")
 preds_d1m2, mae_d1m2, nse_d1m2 = prediction.predict(hparams_setting, model_design, X_P2.to_numpy(), Y_P2.to_numpy(),"D1P2")
-
+print(np.mean(mae_d1m1))
+print(np.mean(mae_d1m2))
+print(np.mean(mae_d1m2)-np.mean(mae_d1m1))
 visualizations.plot_running_losses(running_losses_d2p1["mae_train"], running_losses_d2p1["mae_val"])
 #%%
 visualizations.plot_predictions(Y_P2, preds_d1m1, preds_d1m2, mae_d1m1, mae_d1m2) 

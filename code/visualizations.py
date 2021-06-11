@@ -86,8 +86,8 @@ def plot_running_losses(train_loss, val_loss,
     if train_loss.shape[0] > 1:
         ci_train = np.quantile(train_loss, (0.05,0.95), axis=0)
         ci_val = np.quantile(val_loss, (0.05,0.95), axis=0)
-        print(np.transpose(ci_train)[-1])
-        print(np.transpose(ci_val)[-1])
+        #print(np.transpose(ci_train)[-1])
+        #print(np.transpose(ci_val)[-1])
         train_loss = np.mean(train_loss, axis=0)
         val_loss = np.mean(val_loss, axis=0)
         
