@@ -12,13 +12,13 @@ print("Current Working Directory " , os.getcwd())
 #%%
 # /Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena
 # /Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena
-os.chdir("/Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena") 
+os.chdir("/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena") 
 print("Current Working Directory " , os.getcwd())
 
 #%% Set system path
 import sys
 print(sys.path)
-sys.path.append('/Users/marie/OneDrive/Dokumente/Sc_Master/Internship/Intern_MPI_Jena/code')
+sys.path.append('/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena/code')
 
 #%% Import packages
 import preprocessing
@@ -34,7 +34,17 @@ from scipy.stats import pearsonr
 from scipy.stats import spearmanr
 
 #%%
-
+def GPP_anomaly():
+    X, Y, Y_Preles = preprocessing.preprocessing()
+    X['GPP'] = Y
+    GPP = X.groupby('year')['GPP'].sum()
+    print("Mean sum of GPP over 13 years: ", np.mean(GPP))
+    GPP_diff = np.mean(GPP) - GPP
+    years = X['year'].unique()
+    plt.bar(years, GPP_diff, color="lightblue")
+    plt.hlines(0, xmin= 1999, xmax = 2013, linestyle="dashed", color="black")
+    plt.xlabel("Year")
+    plt.ylabel("GPP anomaly [g C m$^{-2}$ day$^{-1}$]")
 #%% Yearly correlations with GPP
 def yearly_correlations():
     
@@ -176,3 +186,9 @@ corrs_obs = correlation_ts('VPD', 'observed')
 corrs_preles = correlation_ts('VPD', 'preles')  
 corrs_nn = correlation_ts('VPD', 'nn')  
 plot_correlations_by_data("VPD")
+
+#%%
+corrs_obs = correlation_ts('fAPAR', 'observed')
+corrs_preles = correlation_ts('fAPAR', 'preles')  
+corrs_nn = correlation_ts('fAPAR', 'nn')  
+plot_correlations_by_data("fAPAR")

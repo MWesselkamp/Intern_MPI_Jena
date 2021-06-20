@@ -308,6 +308,20 @@ plt.boxplot(df_bp1, labels=["D$_{observed}$", "D$_{preles}$"], showmeans = True,
 #plt.ylim(-0.1,1.1)
 plt.ylabel("Biotic effect size ($\epsilon$)")
 #%%
+print("Mean error for D_observed predictions, Model 1: ", np.mean(df3["mae_d1m1"]))
+print("Mean error for D_observed predictions, Model 2: ", np.mean(df3["mae_d1m2"]))
+print("Standard dev for D_observed predictions, Model 1: ", np.std(df3["mae_d1m1"]))
+print("Standard dev for D_observed predictions, Model 2: ", np.std(df3["mae_d1m2"]))
+print("Mean Biotic effect size  D_observed ", np.mean(df3["mae_diff_d1"]))
+print("Standard dev Biotic effect size  D_observed ", np.std(df3["mae_diff_d1"]))
+
+print("Mean error for D_preles predictions, Model 1: ", np.mean(df3["mae_d2m1"]))
+print("Mean error for D_preles predictions, Model 2: ", np.mean(df3["mae_d2m2"]))
+print("Standard dev for D_preles predictions, Model 1: ", np.std(df3["mae_d2m1"]))
+print("Standard dev for D_preles predictions, Model 2: ", np.std(df3["mae_d2m2"]))
+print("Mean Biotic effect size  D_preles ", np.mean(df3["mae_diff_d2"]))
+print("Standard dev Biotic effect size  D_preles ", np.std(df3["mae_diff_d2"]))
+#%%
 plt.subplot(1, 2, 2)
 plt.boxplot(df_bp2, labels=["D$_{obs}$", "D$_{pre}$"])
 plt.ylim(-0.1,1.1)
