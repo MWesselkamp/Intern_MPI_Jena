@@ -55,10 +55,35 @@ X_P1 , Y_P1, Y_Preles_P1 = preprocessing.split_by_year(X, Y, Y_Preles,
 X_P2 , Y_P2, Y_Preles_P2 = preprocessing.split_by_year(X, Y, Y_Preles,
                                                     years = [2003, 2004])
 
+#%%
+
+font = {'size'   : 18,
+        'weight' : 'normal'}
+
+plt.rc('font', **font)
 #%% Plot Data
 visualizations.plot_data(Y_P1, Y_Preles_P1, True, True)
 visualizations.plot_data(Y_P2, Y_Preles_P2, False, False)
 
+#%%
+def mean_GPP(data = "obs"):
+    years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 ,2008 ,2009 ,2010, 2011, 2012]
+    arr = np.zeros((365, 13))
+    for i in range(len(years)):
+        x , y, y_preles = preprocessing.split_by_year(X, Y, Y_Preles,
+                                                      years = [years[i]])
+        if data=="obs":
+            arr[:,i] = y.squeeze(1)[:365]
+        else:
+            arr[:,i] = y_preles.squeeze(1)[:365]
+    
+    fig, ax = plt.subplots() #figsize=(8,6), dpi=100
+    CI = np.quantile(arr, (0.05,0.95),axis=1)
+    fig.tight_layout(pad=1.5)
+    ax.fill_between(np.arange(365), CI[0], CI[1], color="lightgreen", alpha=0.5)
+    ax.plot(np.arange(365), np.mean(arr, axis=1), color="green", label = "$\widehat{p2}_{m2} - \widehat{p2}_{m1}$", linewidth=1.0)
+    ax.set_ylabel("GPP [g C m$^{-2}$ day$^{-1}$] ")
+    ax.set_xlabel("Day of year")
 #%% Specify model structure and hyperparameter settings.
 randomsearch = False
 if randomsearch:
