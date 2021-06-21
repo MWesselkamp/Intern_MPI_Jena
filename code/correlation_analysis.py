@@ -86,18 +86,56 @@ def mlp_predictions(randomsearch = False):
     model_design = {"layer_sizes":layersizes}
     
     X, Y, Y_Preles = preprocessing.preprocessing()
-    X = X.drop(["year"], axis=1)
     
-    running_losses = training.train(hparams_setting, model_design, X.to_numpy(), Y.to_numpy(), "D1")
+    arr = []
+    years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 ,2008 ,2009 ,2010, 2011, 2012]
     
-    preds, mae, nse = prediction.predict(hparams_setting, model_design, X.to_numpy(), Y.to_numpy(),"D1")
+    for year in years:
+        x , y, y_nn = preprocessing.split_by_year(X, Y, Y_Preles,
+                                                          years = [year])
+        #x = x.drop(["year"], axis=1)
+    
+        running_losses = training.train(hparams_setting, model_design, x.to_numpy(), y.to_numpy(), "D1")
+    
+        preds, mae, nse = prediction.predict(hparams_setting, model_design, x.to_numpy(), y.to_numpy(),"D1")
+        
+        arr.append(preds)
+        
+    arr = np.concatenate(arr, axis=1)
 
-    return preds
+    return arr
+
+ar = mlp_predictions()
 #%%
-def correlation_ts(var, data):
+def mean_GPP_nn():
+    preds = mlp_predictions()
+    m = np.mean(preds, axis=0)
     
     X, Y, Y_Preles = preprocessing.preprocessing()
-    preds  = mlp_predictions()
+    
+    years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 ,2008 ,2009 ,2010, 2011, 2012]
+    arr = np.zeros((365, 13))
+    for i in range(len(years)):
+        x , y, y_nn = preprocessing.split_by_year(X, Y, m,
+                                                          years = [years[i]])
+        arr[:,i] = y_nn[:365]
+        
+    fig, ax = plt.subplots(figsize=(8,6), dpi=100) #figsize=(8,6), dpi=100
+    CI = np.quantile(arr, (0.05,0.95),axis=1)
+    fig.tight_layout(pad=1.5)
+    ax.fill_between(np.arange(365), CI[0], CI[1], color="lightgreen", alpha=0.5)
+    ax.plot(np.arange(365), np.mean(arr, axis=1), color="green", label = "$\widehat{p2}_{m2} - \widehat{p2}_{m1}$", linewidth=1.0)
+    ax.set_ylabel("GPP [g C m$^{-2}$ day$^{-1}$] ")
+    ax.set_xlabel("Day of year")
+    ax.set_ylim(-1,20)
+#%%
+def correlation_ts(var, data, corr = "pearson", nn_preds = None):
+    
+    X, Y, Y_Preles = preprocessing.preprocessing()
+    if not nn_preds is None:
+        preds = nn_preds
+    else:
+        preds  = mlp_predictions()
     Y_NN = np.mean(preds, axis=0)
     
     if data == "observed":
@@ -135,7 +173,10 @@ def correlation_ts(var, data):
         
         c = []
         for i in range(365):
-            c.append(pearsonr(tair_m[:,i], gpp_m[:,i])[0])
+            if corr=="pearson":
+                c.append(pearsonr(tair_m[:,i], gpp_m[:,i])[0])
+            else:
+                c.append(spearmanr(tair_m[:,i], gpp_m[:,i])[0])
         corrs.append(c)
         
     return np.array(corrs)
@@ -165,30 +206,30 @@ def plot_correlations_by_data(var):
     ax.set_ylim(-1,1)
     
 #%%
-corrs_obs = correlation_ts('TAir', 'observed')
-corrs_preles = correlation_ts('TAir', 'preles')  
-corrs_nn = correlation_ts('TAir', 'nn')  
+corrs_obs = correlation_ts('TAir', 'observed', 'pearson')
+corrs_preles = correlation_ts('TAir', 'preles', 'pearson')  
+corrs_nn = correlation_ts('TAir', 'nn', 'pearson')  
 plot_correlations_by_data("TAir")
 #%%
-corrs_obs = correlation_ts('PAR', 'observed')
-corrs_preles = correlation_ts('PAR', 'preles')  
-corrs_nn = correlation_ts('PAR', 'nn')  
+corrs_obs = correlation_ts('PAR', 'observed', 'pearson', nn_preds = ar)
+corrs_preles = correlation_ts('PAR', 'preles', 'pearson', nn_preds = ar) 
+corrs_nn = correlation_ts('PAR', 'nn', 'pearson', nn_preds = ar)
 plot_correlations_by_data("PAR")
 #%%
-corrs_obs = correlation_ts('Precip', 'observed')
-corrs_preles = correlation_ts('Precip', 'preles')  
-corrs_nn = correlation_ts('Precip', 'nn')  
+corrs_obs = correlation_ts('Precip', 'observed', 'pearson', nn_preds = ar)
+corrs_preles = correlation_ts('Precip', 'preles', 'pearson', nn_preds = ar)  
+corrs_nn = correlation_ts('Precip', 'nn', 'pearson', nn_preds = ar)  
 #%% 
 plot_correlations_by_data("Precip")
 
 #%%
-corrs_obs = correlation_ts('VPD', 'observed')
-corrs_preles = correlation_ts('VPD', 'preles')  
-corrs_nn = correlation_ts('VPD', 'nn')  
+corrs_obs = correlation_ts('VPD', 'observed', 'pearson', nn_preds = ar)
+corrs_preles = correlation_ts('VPD', 'preles', 'pearson', nn_preds = ar)  
+corrs_nn = correlation_ts('VPD', 'nn', 'pearson', nn_preds = ar)  
 plot_correlations_by_data("VPD")
 
 #%%
-corrs_obs = correlation_ts('fAPAR', 'observed')
-corrs_preles = correlation_ts('fAPAR', 'preles')  
-corrs_nn = correlation_ts('fAPAR', 'nn')  
+corrs_obs = correlation_ts('fAPAR', 'observed', 'spearman', nn_preds = None)
+corrs_preles = correlation_ts('fAPAR', 'preles', 'spearman', nn_preds = None)  
+corrs_nn = correlation_ts('fAPAR', 'nn', 'spearman', nn_preds = None)  
 plot_correlations_by_data("fAPAR")

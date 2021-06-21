@@ -30,6 +30,7 @@ print(sys.path)
 sys.path.append('/Users/Marieke_Wesselkamp/Documents/Projects/Intern_MPI_Jena/code')
 
 #%% Import packages
+
 import preprocessing
 import visualizations
 import utils
@@ -77,13 +78,14 @@ def mean_GPP(data = "obs"):
         else:
             arr[:,i] = y_preles.squeeze(1)[:365]
     
-    fig, ax = plt.subplots() #figsize=(8,6), dpi=100
+    fig, ax = plt.subplots(figsize=(8,6), dpi=100) #figsize=(8,6), dpi=100
     CI = np.quantile(arr, (0.05,0.95),axis=1)
     fig.tight_layout(pad=1.5)
     ax.fill_between(np.arange(365), CI[0], CI[1], color="lightgreen", alpha=0.5)
     ax.plot(np.arange(365), np.mean(arr, axis=1), color="green", label = "$\widehat{p2}_{m2} - \widehat{p2}_{m1}$", linewidth=1.0)
     ax.set_ylabel("GPP [g C m$^{-2}$ day$^{-1}$] ")
     ax.set_xlabel("Day of year")
+    ax.set_ylim(-1,20)
 #%% Specify model structure and hyperparameter settings.
 randomsearch = False
 if randomsearch:
