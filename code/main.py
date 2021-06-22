@@ -63,8 +63,8 @@ font = {'size'   : 18,
 
 plt.rc('font', **font)
 #%% Plot Data
-visualizations.plot_data(Y_P1, Y_Preles_P1, True, True)
-visualizations.plot_data(Y_P2, Y_Preles_P2, False, False)
+visualizations.plot_data(Y, Y_Preles, True, True)
+visualizations.plot_data(Y, Y_Preles, False, False)
 
 #%%
 def mean_GPP(data = "obs"):
@@ -100,6 +100,25 @@ hparams_setting = {"epochs":1000,
            "learningrate":hparams[0],
            "history":1}
 model_design = {"layer_sizes":layersizes}
+
+#%%
+import models
+model = models.MLP(model_design["layer_sizes"])
+
+def get_n_params(model):
+    pp=0
+    for p in list(model.parameters()):
+        nn=1
+        for s in list(p.size()):
+            nn = nn*s
+        pp += nn
+    return pp
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+print(get_n_params(model))
+print(count_parameters(model))
 #%%
 font = {'size'   : 18,
         'weight' : 'normal'}

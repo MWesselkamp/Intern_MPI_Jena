@@ -17,11 +17,14 @@ def plot_data(Obs, Sim, first = True,
         colors = ["black", "green"]
     else:
         colors = ["gray", "lightgreen"]
-        
+    
+    from matplotlib.pyplot import figure
+    
+    figure(figsize=(25, 6), dpi=100)
     plt.plot(Obs, label="Observed", color="black")
     plt.plot(Sim, label="Simulated", color="lightgreen")
     if label:
-        plt.legend()
+        plt.legend(loc="upper right")
     plt.xlabel("Day")
     plt.ylabel("GPP [g C m$^{-2}$ day$^{-1}$]")
     
